@@ -1,0 +1,10 @@
+{
+  "name": "legacy-goat-abap-runtime",
+  "private": true,
+  "type": "module",
+  "description": "open-abap ICF shim: transpiles the ABAP GL handler and serves it over HTTP.",
+  "dependencies": {
+    "@abaplint/transpiler-cli": "2.13.93",
+    "@abaplint/runtime": "2.13.93"
+  }
+}

@@ -1,0 +1,196 @@
+# legacy-goat stack. Runtime-agnostic: consumed by `docker compose` and `podman compose`.
+# The app source is bind-mounted read-only from the sibling legacy-goat checkout; switch which
+# branch is mounted with `make checkout APP_BRANCH=<main|vulnerable|fixed>` (no rebuild needed).
+# Build contexts are the runtimes-repo root so a Dockerfile can reach its adapter under middleware/.
+
+name: legacy-goat
+
+services:
+  sqldb:
+    image: ${SQLDB_IMAGE:-docker.io/library/postgres:16}
+    environment:
+      POSTGRES_DB: ${SQL_DBNAME:-ledger}
+      POSTGRES_USER: ${SQL_USER:-goat}
+      POSTGRES_PASSWORD: ${SQL_PASSWORD:-labpass}
+    ports:
+      - "${SQL_PORT:-5432}:5432"
+    volumes:
+      - sqldata:/var/lib/postgresql/data
+      - ../db/postgres:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SQL_USER:-goat} -d ${SQL_DBNAME:-ledger}"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  cobol:
+    build:
+      context: ..
+      dockerfile: runtimes/cobol/Dockerfile
+    ports:
+      - "${COBOL_PORT:-8082}:8080"
+    environment:
+      APP_BRANCH: ${APP_BRANCH:-fixed}
+      SQL_HOST: sqldb
+      SQL_DBNAME: ${SQL_DBNAME:-ledger}
+      SQL_USER: ${SQL_USER:-goat}
+      SQL_PASSWORD: ${SQL_PASSWORD:-labpass}
+      # Profile knob (config.schema.json session_roaming): "on" arms the LG-SQLI-001 single-query sign-on.
+      SESSION_ROAMING: ${SESSION_ROAMING:-off}
+      # Profile knob (config.schema.json home_branch_only): "off" disables the LG-AC-001 branch check.
+      HOME_BRANCH_ONLY: ${HOME_BRANCH_ONLY:-on}
+      # Profile knob (config.schema.json alnum_customer_ids): "on" arms the LG-DLII-001 DL/I SSA injection.
+      ALNUM_CUSTOMER_IDS: ${ALNUM_CUSTOMER_IDS:-off}
+      # Profile knob (config.schema.json extended_tiers): "on" arms the LG-MEM-001 tier-table OOB read.
+      EXTENDED_TIERS: ${EXTENDED_TIERS:-off}
+      # Credential-hashing salt provisioned at deploy time (the `fixed` branch env-sources it; main/
+      # vulnerable keep the in-source literal and ignore this).
+      PW_SALT: ${PW_SALT:-SALT}
+    volumes:
+      - ${APP_SRC:-../../legacy-goat}:/app-src:ro
+      - imsdli:/var/imsdli
+      - vsam:/var/vsam
+    depends_on:
+      sqldb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  fortran:
+    build:
+      context: ..
+      dockerfile: runtimes/fortran/Dockerfile
+    ports:
+      - "${FORTRAN_PORT:-8083}:8080"
+    environment:
+      APP_BRANCH: ${APP_BRANCH:-fixed}
+    volumes:
+      - ${APP_SRC:-../../legacy-goat}:/app-src:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  pascal:
+    build:
+      context: ..
+      dockerfile: runtimes/pascal/Dockerfile
+    ports:
+      - "${PASCAL_PORT:-8085}:8080"
+    environment:
+      APP_BRANCH: ${APP_BRANCH:-fixed}
+      # Profile knob (config.schema.json session_ttl): console session lifetime (LG-AUTH).
+      SESSION_TTL: ${SESSION_TTL:-900}
+      # Profile knob (config.schema.json session_roaming): "on" arms the LG-AUTH-001 weak token path.
+      SESSION_ROAMING: ${SESSION_ROAMING:-off}
+      # Profile knob (config.schema.json receipt_subfolders): "on" arms the LG-PATH-001 receipt traversal.
+      RECEIPT_SUBFOLDERS: ${RECEIPT_SUBFOLDERS:-off}
+      # Profile knob (config.schema.json signon_trace): "on" arms the LG-LOG-001 cleartext-password log.
+      SIGNON_TRACE: ${SIGNON_TRACE:-off}
+      # Profile knob (config.schema.json partner_preview): "on" arms the LG-SSRF-001 upstream-preview fetch.
+      PARTNER_PREVIEW: ${PARTNER_PREVIEW:-off}
+      # Profile knob (config.schema.json correspondent_advices): "on" arms the LG-XXE-001 advice-import XXE.
+      CORRESPONDENT_ADVICES: ${CORRESPONDENT_ADVICES:-off}
+      # Profile knob (config.schema.json rich_notices): "on" arms the LG-XSS-001 reflected-notice XSS.
+      RICH_NOTICES: ${RICH_NOTICES:-off}
+    volumes:
+      - ${APP_SRC:-../../legacy-goat}:/app-src:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  sas:
+    build:
+      context: ..
+      dockerfile: runtimes/sas/Dockerfile
+    ports:
+      - "${SAS_PORT:-8084}:8080"
+    environment:
+      APP_BRANCH: ${APP_BRANCH:-fixed}
+      SQL_HOST: sqldb
+      SQL_DBNAME: ${SQL_DBNAME:-ledger}
+      SQL_USER: ${SQL_USER:-goat}
+      SQL_PASSWORD: ${SQL_PASSWORD:-labpass}
+      # Profile knob (config.schema.json report_archive): arms the SAS %SYSEXEC export sink (LG-CMDI-001).
+      REPORT_ARCHIVE: ${REPORT_ARCHIVE:-off}
+      # Profile knob (config.schema.json as_of_dates): arms the SAS pass-through SQLI (LG-SQLI-002).
+      AS_OF_DATES: ${AS_OF_DATES:-off}
+    volumes:
+      - ${APP_SRC:-../../legacy-goat}:/app-src:ro
+    depends_on:
+      sqldb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  abap:
+    build:
+      context: ..
+      dockerfile: runtimes/abap/Dockerfile
+    ports:
+      - "${ABAP_PORT:-8086}:8080"
+    environment:
+      APP_BRANCH: ${APP_BRANCH:-fixed}
+      # Profile config threaded into the ICF handler (config.schema.json preformatted_refs).
+      PREFORMATTED_REFS: ${PREFORMATTED_REFS:-off}
+    volumes:
+      - ${APP_SRC:-../../legacy-goat}:/app-src:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 45s
+
+  gateway:
+    build:
+      context: ..
+      dockerfile: middleware/gateway/Dockerfile
+    environment:
+      APP_BRANCH: ${APP_BRANCH:-fixed}
+      COBOL_URL: http://cobol:8080
+      FORTRAN_URL: http://fortran:8080
+      PASCAL_URL: http://pascal:8080
+      SAS_URL: http://sas:8080
+      ABAP_URL: http://abap:8080
+      # Profile config threaded into the flow (config.schema.json).
+      REQUIRE_APPROVAL_OVER: ${REQUIRE_APPROVAL_OVER:-10000.00}
+      REPORT_ARCHIVE: ${REPORT_ARCHIVE:-off}
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    depends_on:
+      cobol:
+        condition: service_healthy
+      fortran:
+        condition: service_healthy
+      pascal:
+        condition: service_healthy
+      sas:
+        condition: service_healthy
+      abap:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+volumes:
+  sqldata:
+  imsdli:
+  vsam:

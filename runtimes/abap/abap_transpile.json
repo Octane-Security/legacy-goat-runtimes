@@ -1,0 +1,6 @@
+{
+  "input_folder": "src",
+  "output_folder": "output",
+  "libs": [{ "folder": "../open-abap-core" }],
+  "options": { "unknownTypes": "runtimeError" }
+}
