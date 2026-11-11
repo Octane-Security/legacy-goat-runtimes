@@ -195,10 +195,13 @@ make run-integration APP_SRC=$HOME/…/lg-vulnerable   # vulnerable version -> P
 `test/integration.sh` touches every vulnerable section with legitimate input and asserts the normal
 result. It never injects, overflows, or traverses anything, so it passes the same way on both.
 `test/operations.sh` covers the teller operations, which carry no planted flaw, including the requests
-they must refuse. The exploit proofs live in `triggers/`:
+they must refuse. `test/replies.sh` sends input a module accepts but that is not ordinary, such as a GL
+reference holding control characters, and requires a valid JSON reply that returns it intact; it is
+skipped while `PREFORMATTED_REFS` is on. The exploit proofs live in `triggers/`:
 
 | Suite                 | Input              | Vulnerable version | Fixed version   |
 |-----------------------|--------------------|--------------------|-----------------|
 | `test/integration.sh` | benign             | PASS (normal)      | PASS (normal)   |
 | `test/operations.sh`  | benign and refused | PASS               | PASS            |
+| `test/replies.sh`     | unusual, accepted  | PASS               | PASS            |
 | `triggers/*.sh`       | malicious          | FIRE (exploited)   | inert (blocked) |

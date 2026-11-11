@@ -16,10 +16,10 @@ COMPOSE := $(shell \
 
 CC := $(COMPOSE) -f $(COMPOSE_FILE) --env-file $(ENV_FILE) --env-file $(PROFILE_ENV)
 
-.PHONY: help check-compose config checkout up up-build down logs ps test integration operations run-integration verify clean ground-truth check-alignment score
+.PHONY: help check-compose config checkout up up-build down logs ps test integration operations replies run-integration verify clean ground-truth check-alignment score
 
 help:
-	@echo "targets: config checkout up up-build down logs ps test integration operations verify ground-truth check-alignment score clean"
+	@echo "targets: config checkout up up-build down logs ps test integration operations replies verify ground-truth check-alignment score clean"
 	@echo "vars:    APP_BRANCH=$(APP_BRANCH) (main|vulnerable|fixed)  APP_PROFILE=$(APP_PROFILE) (baseline|permissive)  APP_DIR=$(APP_DIR)"
 	@echo "         APP_SRC=<tree> deploys a generated tree (a path the container runtime can mount) instead of APP_DIR"
 	@echo "engine:  $(if $(COMPOSE),$(COMPOSE),NONE — install a compose provider, see README)"
@@ -65,6 +65,10 @@ integration:
 # Teller operations (inquiry, statement, cash, holds) and their rules, via the gateway and the console.
 operations:
 	./test/operations.sh
+
+# Replies to unusual but accepted input stay valid JSON (GL references with control characters).
+replies:
+	APP_PROFILE=$(APP_PROFILE) ./test/replies.sh
 
 # Deploy a given app version and run the happy-path suite against it. Prove both versions match:
 #   make run-integration APP_SRC=/path/to/vulnerable-checkout
