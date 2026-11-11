@@ -1,0 +1,18 @@
+[project]
+name = "legacy-goat-runtimes"
+version = "0.0.0"
+description = "Test harness and exploit proofs for the legacy-goat stack"
+requires-python = ">=3.10"
+dependencies = [
+    "pytest>=8.3",
+    "requests>=2.32",
+    "pyyaml>=6.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+pythonpath = ["."]
+addopts = "-ra"

@@ -33,7 +33,7 @@ Closes #
 
 - [ ] It links an issue (trivial fixes such as typos excepted).
 - [ ] `make verify APP_PROFILE=baseline` and `make verify APP_PROFILE=permissive` pass with `APP_SRC` set to the generated `vulnerable` tree of the legacy-goat commit named above: every trigger fires exactly where the answer key grades its instance exploitable.
-- [ ] With `APP_SRC` set to the generated `fixed` tree, `make run-integration` passes under both profiles, and no trigger fires (`for t in triggers/LG-*.sh; do "$t" >/dev/null 2>&1 && echo "fired: $t"; done` prints nothing).
+- [ ] With `APP_SRC` set to the generated `fixed` tree, `make run-integration` passes under both profiles, and no trigger fires (`make triggers` reports every trigger inert and exits 0).
 - [ ] `make test`, `make integration` and `make operations` pass against the stack under each profile.
 - [ ] Documentation changes with behavior: the README, `docs/attacker-position.md` or `docs/exercising-the-app.md`.
 - [ ] Vendored code keeps its license notice.

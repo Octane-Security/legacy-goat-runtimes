@@ -163,14 +163,13 @@ USD, active), `000000000045` (closed), `000000000099` (frozen, for rejection pat
 ## 3. Confirm there's nothing to exploit
 
 The `legacy-goat-runtimes/triggers/` directory holds one proof-of-exploit per known vulnerability
-class. On the **fixed** version every one of them is **inert** (exit non-zero):
+class. On the **fixed** version every one of them is **inert**:
 
 ```bash
 cd legacy-goat-runtimes
-for t in triggers/LG-*.sh; do
-  if "$t" >/dev/null 2>&1; then echo "FIRED  $(basename "$t")"; else echo "inert  $(basename "$t")"; fi
-done
-# fixed  -> all inert.   (Run the same against the `vulnerable` deployment and they FIRE.)
+./triggers/run_trigger.sh --all     # or: make triggers
+# fixed  -> all inert, exit 0.   (Run the same against the `vulnerable` deployment and they FIRE.)
+./triggers/run_trigger.sh LG-XSS-001   # one proof, with what the stack answered
 ```
 
 `make verify APP_PROFILE=permissive` runs the whole matrix and asserts each trigger fires **iff** the
@@ -192,16 +191,17 @@ make run-integration APP_SRC=$HOME/…/lg-fixed        # fixed version     -> PA
 make run-integration APP_SRC=$HOME/…/lg-vulnerable   # vulnerable version -> PASS (identical)
 ```
 
-`test/integration.sh` touches every vulnerable section with legitimate input and asserts the normal
-result. It never injects, overflows, or traverses anything, so it passes the same way on both.
-`test/operations.sh` covers the teller operations, which carry no planted flaw, including the requests
-they must refuse. `test/replies.sh` sends input a module accepts but that is not ordinary, such as a GL
-reference holding control characters, and requires a valid JSON reply that returns it intact; it is
-skipped while `PREFORMATTED_REFS` is on. The exploit proofs live in `triggers/`:
+`test/test_integration.py` touches every vulnerable section with legitimate input and asserts the
+normal result. It never injects, overflows, or traverses anything, so it passes the same way on both.
+`test/test_operations.py` covers the teller operations, which carry no planted flaw, including the
+requests they must refuse. `test/test_replies.py` sends input a module accepts but that is not
+ordinary, such as a GL reference holding control characters, and requires a valid JSON reply that
+returns it intact; it is skipped while `PREFORMATTED_REFS` is on. The exploit proofs live in
+`triggers/`:
 
-| Suite                 | Input              | Vulnerable version | Fixed version   |
-|-----------------------|--------------------|--------------------|-----------------|
-| `test/integration.sh` | benign             | PASS (normal)      | PASS (normal)   |
-| `test/operations.sh`  | benign and refused | PASS               | PASS            |
-| `test/replies.sh`     | unusual, accepted  | PASS               | PASS            |
-| `triggers/*.sh`       | malicious          | FIRE (exploited)   | inert (blocked) |
+| Suite                      | Input              | Vulnerable version | Fixed version   |
+|----------------------------|--------------------|--------------------|-----------------|
+| `test/test_integration.py` | benign             | PASS (normal)      | PASS (normal)   |
+| `test/test_operations.py`  | benign and refused | PASS               | PASS            |
+| `test/test_replies.py`     | unusual, accepted  | PASS               | PASS            |
+| `triggers/LG-*.py`         | malicious          | FIRE (exploited)   | inert (blocked) |
