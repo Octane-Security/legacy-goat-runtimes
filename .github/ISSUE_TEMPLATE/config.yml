@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Defect in the application, a new planted flaw, or an answer key correction
+    url: https://github.com/Octane-Security/legacy-goat/issues/new/choose
+    about: The application source, the answer key and the blind-branch generator live in legacy-goat.

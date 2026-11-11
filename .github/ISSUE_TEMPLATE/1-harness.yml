@@ -1,0 +1,52 @@
+name: Problem with the harness
+description: A runtime image, adapter, the gateway, a database, a test suite, the tooling or the documentation doesn't work as described.
+title: ""
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What doesn't work
+      description: What you expected, what happened instead, and the component involved.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: The commands you ran (for example `make up-build APP_PROFILE=permissive`, `make verify`) and their output.
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: commits
+    attributes:
+      label: Commits
+      description: legacy-goat-runtimes commit, and the legacy-goat branch or commit you deployed (`APP_BRANCH` or `APP_SRC`).
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system and architecture, and the compose provider and its version (`make config` prints which one it found).
+    validations:
+      required: true
+  - type: dropdown
+    id: profile
+    attributes:
+      label: Profile
+      options:
+        - baseline
+        - permissive
+        - both
+        - not profile-specific
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched the existing issues and pull requests.
+          required: true
