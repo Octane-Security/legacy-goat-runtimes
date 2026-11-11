@@ -83,12 +83,8 @@ instructions given to a scanner must state the same position.
 
 ## Contributing
 
-Octane Security maintains this harness and [Legacy Goat](https://github.com/Octane-Security/legacy-goat),
-and we welcome pull requests from the security community. New exploit proofs, runtime and tooling
-improvements, and fixes to anything that breaks all help make Legacy Goat better for everyone. Open
-pull requests against `main`, and run `make verify` under both profiles before you do. A new planted
-flaw spans both repositories: its code and answer-key entry go to legacy-goat, and its proof goes
-here as `triggers/<id>.py`.
+We welcome issues and pull requests from the security community. One guide covers this repository
+and [Legacy Goat](https://github.com/Octane-Security/legacy-goat): [CONTRIBUTING.md](https://github.com/Octane-Security/legacy-goat/blob/main/.github/CONTRIBUTING.md).
 
 ## License
 
