@@ -12,5 +12,8 @@ all three branches (vulns do not break normal operation), so the same test passe
   account it touches.
 - `integration.sh` — benign input through every vulnerable section; passes the same on `vulnerable`
   and `fixed`.
-- `verify.sh` — `run.sh` and `operations.sh`, then every trigger against the manifest's grades for
-  the profile (`make verify APP_PROFILE=<profile>`).
+- `replies.sh` — input a module accepts but that is not ordinary must still get a valid JSON reply: a
+  GL reference holding control characters comes back escaped and intact. Skipped while
+  `PREFORMATTED_REFS` is on (`make replies APP_PROFILE=<profile>`).
+- `verify.sh` — `run.sh`, `operations.sh` and `replies.sh`, then every trigger against the manifest's
+  grades for the profile (`make verify APP_PROFILE=<profile>`).

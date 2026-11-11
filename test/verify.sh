@@ -39,11 +39,13 @@ done
 [ "$(curl -sS "$GATEWAY_URL/healthz" 2>/dev/null || true)" = "ok" ] \
   || { echo "[verify] gateway not healthy at $GATEWAY_URL" >&2; exit 1; }
 
-# 1) Happy path and teller operations — identical on every branch/profile.
+# 1) Happy path and teller operations — identical on every branch/profile — then the reply checks.
 echo "[verify] --- happy-path acceptance ---"
 GATEWAY_URL="$GATEWAY_URL" "$HERE/run.sh"
 echo "[verify] --- teller operations ---"
 GATEWAY_URL="$GATEWAY_URL" "$HERE/operations.sh"
+echo "[verify] --- reply checks ---"
+APP_PROFILE="$APP_PROFILE" "$HERE/replies.sh"
 
 # 2) Per-vuln trigger matrix vs the manifest grades for this profile.
 echo "[verify] --- exploitability matrix ($APP_PROFILE) ---"
