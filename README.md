@@ -19,25 +19,33 @@ db/{postgres,vsam,imsdli,db2}/                SQL ledger, indexed-file store, hi
 compose/                                     compose.yaml + .env (APP_BRANCH selector)
 profiles/                                    per-profile settings (see profiles/README.md)
 tooling/                                     ground-truth SARIF, alignment check, scorer
-triggers/                                    runnable per-vulnerability proofs
-test/                                        acceptance, teller-operations and integration suites
+triggers/                                    per-vulnerability exploit proofs (Python) and run_trigger.sh
+test/                                        pytest suites: acceptance, teller operations, integration, replies,
+                                             the exploitability matrix; a shell wrapper for each
+harness/                                     shared Python for the suites and proofs: service URLs, HTTP, stack
 docs/                                        how to drive the app; the attacker position the grades assume
 ```
 
 ## Running the stack
 
 You need a compose provider (Docker's compose plugin, or Podman with `podman compose`, which you can
-get with `uv tool install podman-compose`), plus `curl`, `python3` and
-[uv](https://docs.astral.sh/uv/) for the tests. The `Makefile` picks whichever compose provider is
-installed, and `make config` reports which one it found.
+get with `uv tool install podman-compose`), plus [uv](https://docs.astral.sh/uv/), which runs the
+tests and exploit proofs with the dependencies pinned in `pyproject.toml` and `uv.lock`. The
+`Makefile` picks whichever compose provider is installed, and `make config` reports which one it
+found.
 
 ```
 make up-build APP_PROFILE=permissive   # build the images (the COBOL one compiles GixSQL) and start
 make test                              # transfer flow: balances, fee, report, GL document
 make operations                        # teller operations and the rules they enforce
 make verify APP_PROFILE=permissive     # recreate under the profile, run the suites, then every trigger
+make triggers                          # run every exploit proof once: FIRED or inert
 make down
 ```
+
+The suites are pytest modules in `test/`, and the scripts beside them are wrappers that pass their
+arguments on to pytest, so one check runs by name: `./test/operations.sh -k inquiry`. A single proof
+runs with `./triggers/run_trigger.sh LG-AC-001`.
 
 The console is then at <http://localhost:8085/> (`TLR001` / `teller-pw`, or the supervisor `SUP001` /
 `super-pw`) and the gateway at <http://localhost:8080/>. [docs/exercising-the-app.md](docs/exercising-the-app.md)
@@ -80,7 +88,7 @@ and we welcome pull requests from the security community. New exploit proofs, ru
 improvements, and fixes to anything that breaks all help make Legacy Goat better for everyone. Open
 pull requests against `main`, and run `make verify` under both profiles before you do. A new planted
 flaw spans both repositories: its code and answer-key entry go to legacy-goat, and its proof goes
-under `triggers/` here.
+here as `triggers/<id>.py`.
 
 ## License
 

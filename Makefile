@@ -16,10 +16,10 @@ COMPOSE := $(shell \
 
 CC := $(COMPOSE) -f $(COMPOSE_FILE) --env-file $(ENV_FILE) --env-file $(PROFILE_ENV)
 
-.PHONY: help check-compose config checkout up up-build down logs ps test integration operations replies run-integration verify clean ground-truth check-alignment score
+.PHONY: help check-compose config checkout up up-build down logs ps test integration operations replies run-integration verify triggers clean ground-truth check-alignment score
 
 help:
-	@echo "targets: config checkout up up-build down logs ps test integration operations replies verify ground-truth check-alignment score clean"
+	@echo "targets: config checkout up up-build down logs ps test integration operations replies run-integration verify triggers ground-truth check-alignment score clean"
 	@echo "vars:    APP_BRANCH=$(APP_BRANCH) (main|vulnerable|fixed)  APP_PROFILE=$(APP_PROFILE) (baseline|permissive)  APP_DIR=$(APP_DIR)"
 	@echo "         APP_SRC=<tree> deploys a generated tree (a path the container runtime can mount) instead of APP_DIR"
 	@echo "engine:  $(if $(COMPOSE),$(COMPOSE),NONE — install a compose provider, see README)"
@@ -78,9 +78,15 @@ run-integration:
 
 # Standardized scoring run for the CURRENT profile: the happy-path test plus every per-vuln trigger,
 # each asserted to fire iff the manifest grades that instance exploitable under this profile.
+# The suites are pytest modules in test/; each script there passes extra arguments to pytest.
 verify: check-compose
 	APP_BRANCH=$(APP_BRANCH) APP_PROFILE=$(APP_PROFILE) APP_DIR=$(APP_DIR) APP_SRC=$(APP_SRC) \
 	  COMPOSE_CMD="$(CC)" ./test/verify.sh
+
+# Run every exploit proof once against the running stack: FIRED or inert per proof. Exits 0 only if
+# none fired, which is the check for a deployed `fixed` tree. One proof: ./triggers/run_trigger.sh <id>
+triggers:
+	./triggers/run_trigger.sh --all
 
 # Blind-branch generation (clue-scan, gen-blind, publish) now lives in the legacy-goat repo's own
 # tooling/ so its CI can push branches with GITHUB_TOKEN (no cross-repo secret). See legacy-goat/tooling.
